@@ -158,7 +158,8 @@ async function putUpdateInResponseAsync(
 
   // Get release record to include release notes
   const db = DatabaseFactory.getDatabase();
-  const releaseRecord = await db.getReleaseByPath(updateBundlePath + '.zip');
+  // Use the latest record for this runtimeVersion to avoid path-specific lookups that may vary by storage
+  const releaseRecord = await db.getLatestReleaseRecordForRuntimeVersion(runtimeVersion);
 
   // NoUpdateAvailable directive only supported on protocol version 1
   // for protocol version 0, serve most recent update as normal

@@ -29,7 +29,7 @@ export class PostgresDatabase implements DatabaseInterface {
   }
   async getReleaseByPath(path: string): Promise<Release | null> {
     const query = `
-      SELECT id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash"
+      SELECT id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash", commit_message as "commitMessage", release_notes as "releaseNotes", update_id as "updateId"
       FROM ${Tables.RELEASES} WHERE path = $1
     `;
     const { rows } = await this.pool.query(query, [path]);

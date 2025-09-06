@@ -51,15 +51,19 @@ export default async function uploadHandler(req: NextApiRequest, res: NextApiRes
 
     const path = await storage.uploadFile(`${updatePath}/${timestamp}.zip`, zipContent);
 
-    await DatabaseFactory.getDatabase().createRelease({
+    const releasePayload: any = {
       path,
       runtimeVersion,
       timestamp: moment().utc().toString(),
       commitHash,
       commitMessage,
-      releaseNotes,
       updateId,
-    });
+    };
+    if (releaseNotes && releaseNotes.trim().length > 0) {
+      releasePayload.releaseNotes = releaseNotes;
+    }
+
+    await DatabaseFactory.getDatabase().createRelease(releasePayload);
 
     res.status(200).json({ success: true, path });
   } catch (error) {
