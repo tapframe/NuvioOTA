@@ -38,7 +38,12 @@ export default async function manifestEndpoint(req: NextApiRequest, res: NextApi
     return;
   }
 
-  const protocolVersion = parseInt(Array.isArray(protocolVersionMaybeArray) ? protocolVersionMaybeArray[0] : protocolVersionMaybeArray ?? '0', 10);
+  const protocolVersion = parseInt(
+    Array.isArray(protocolVersionMaybeArray)
+      ? protocolVersionMaybeArray[0]
+      : protocolVersionMaybeArray ?? '0',
+    10
+  );
 
   const platform = req.headers['expo-platform'] ?? req.query['platform'];
   if (platform !== 'ios' && platform !== 'android') {
@@ -58,8 +63,8 @@ export default async function manifestEndpoint(req: NextApiRequest, res: NextApi
     return;
   }
 
-  const database = DatabaseFactory.getDatabase();
-  const releaseRecord = await database.getLatestReleaseRecordForRuntimeVersion(runtimeVersion);
+  const db = DatabaseFactory.getDatabase();
+  const releaseRecord = await db.getLatestReleaseRecordForRuntimeVersion(runtimeVersion);
 
   if (releaseRecord) {
     const updateId = releaseRecord.updateId;
@@ -152,8 +157,8 @@ async function putUpdateInResponseAsync(
   });
 
   // Get release record to include release notes
-  const database = DatabaseFactory.getDatabase();
-  const releaseRecord = await database.getReleaseByPath(updateBundlePath + '.zip');
+  const db = DatabaseFactory.getDatabase();
+  const releaseRecord = await db.getReleaseByPath(updateBundlePath + '.zip');
 
   // NoUpdateAvailable directive only supported on protocol version 1
   // for protocol version 0, serve most recent update as normal
