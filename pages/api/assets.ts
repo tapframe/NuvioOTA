@@ -42,6 +42,12 @@ export default async function assetsEndpoint(req: NextApiRequest, res: NextApiRe
     );
     const isLaunchAsset = metadataJson.fileMetadata[platform].bundle === assetPath;
 
+    if (!assetMetadata && !isLaunchAsset) {
+      res.statusCode = 404;
+      res.json({ error: `Asset not found: ${assetPath}` });
+      return;
+    }
+
     const asset = await ZipHelper.getFileFromZip(zip, assetPath as string);
 
     res.statusCode = 200;
