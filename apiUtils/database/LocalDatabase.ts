@@ -76,9 +76,9 @@ export class PostgresDatabase implements DatabaseInterface {
 
   async createRelease(release: Omit<Release, 'id'>): Promise<Release> {
     const query = `
-      INSERT INTO ${Tables.RELEASES} (runtime_version, path, timestamp, commit_hash, commit_message, update_id)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash", update_id as "updateId"
+      INSERT INTO ${Tables.RELEASES} (runtime_version, path, timestamp, commit_hash, commit_message, release_notes, update_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash", commit_message as "commitMessage", release_notes as "releaseNotes", update_id as "updateId"
     `;
 
     const values = [
@@ -87,6 +87,7 @@ export class PostgresDatabase implements DatabaseInterface {
       release.timestamp,
       release.commitHash,
       release.commitMessage,
+      release.releaseNotes || null,
       release.updateId,
     ];
     const { rows } = await this.pool.query(query, values);
@@ -95,7 +96,7 @@ export class PostgresDatabase implements DatabaseInterface {
 
   async getRelease(id: string): Promise<Release | null> {
     const query = `
-      SELECT id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash"
+      SELECT id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash", commit_message as "commitMessage", release_notes as "releaseNotes", update_id as "updateId"
       FROM ${Tables.RELEASES} WHERE id = $1
     `;
 
@@ -105,7 +106,7 @@ export class PostgresDatabase implements DatabaseInterface {
 
   async listReleases(): Promise<Release[]> {
     const query = `
-      SELECT id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash", commit_message as "commitMessage"
+      SELECT id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash", commit_message as "commitMessage", release_notes as "releaseNotes", update_id as "updateId"
       FROM ${Tables.RELEASES}
       ORDER BY timestamp DESC
     `;

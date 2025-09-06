@@ -30,6 +30,7 @@ export default async function uploadHandler(req: NextApiRequest, res: NextApiRes
     const runtimeVersion = fields.runtimeVersion?.[0];
     const commitHash = fields.commitHash?.[0];
     const commitMessage = fields.commitMessage?.[0] || 'No message provided';
+    const releaseNotes = fields.releaseNotes?.[0] || '';
 
     if (!file || !runtimeVersion || !commitHash) {
       res.status(400).json({ error: 'Missing file, runtime version, or commit hash' });
@@ -56,6 +57,7 @@ export default async function uploadHandler(req: NextApiRequest, res: NextApiRes
       timestamp: moment().utc().toString(),
       commitHash,
       commitMessage,
+      releaseNotes,
       updateId,
     });
 

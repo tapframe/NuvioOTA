@@ -151,6 +151,10 @@ async function putUpdateInResponseAsync(
     runtimeVersion,
   });
 
+  // Get release record to include release notes
+  const database = DatabaseFactory.getDatabase();
+  const releaseRecord = await database.getReleaseByPath(updateBundlePath + '.zip');
+
   // NoUpdateAvailable directive only supported on protocol version 1
   // for protocol version 0, serve most recent update as normal
   if (currentUpdateId === HashHelper.convertSHA256HashToUUID(id) && protocolVersion === 1) {
@@ -187,7 +191,9 @@ async function putUpdateInResponseAsync(
       platform,
       ext: null,
     }),
-    metadata: {},
+    metadata: {
+      ...(releaseRecord?.releaseNotes && { releaseNotes: releaseRecord.releaseNotes }),
+    },
     extra: {
       expoClient: expoConfig,
     },

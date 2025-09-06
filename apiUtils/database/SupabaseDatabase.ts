@@ -128,6 +128,7 @@ export class SupabaseDatabase implements DatabaseInterface {
         timestamp: release.timestamp,
         commit_hash: release.commitHash,
         commit_message: release.commitMessage,
+        release_notes: release.releaseNotes || null,
         update_id: release.updateId,
       })
       .select()

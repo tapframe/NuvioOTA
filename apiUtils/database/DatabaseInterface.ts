@@ -5,6 +5,7 @@ export interface Release {
   timestamp: string;
   commitHash: string;
   commitMessage: string;
+  releaseNotes?: string;
   updateId?: string;
 }
 
