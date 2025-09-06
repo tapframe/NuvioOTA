@@ -65,3 +65,5 @@ echo "🔗 Useful links:"
 echo "   - Koyeb Dashboard: https://app.koyeb.com"
 echo "   - Deployment Guide: ./koyeb-deployment-guide.md"
 echo "   - Your app will be available at: $HOST"
+
+

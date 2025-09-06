@@ -259,3 +259,5 @@ Visit: `https://your-app-name.koyeb.app`
 3. **Scale**: Add more instances as your user base grows
 4. **Backup**: Set up regular database backups
 5. **Analytics**: Add update analytics and tracking
+
+

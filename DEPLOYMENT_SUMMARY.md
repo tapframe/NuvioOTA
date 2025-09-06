@@ -127,3 +127,5 @@ Update your Nuvio app's `app.json`:
 Your xavia-ota server is production-ready and optimized for Koyeb deployment. The database is configured, the build is working, and all necessary files are in place.
 
 **Next**: Deploy to Koyeb and start pushing updates to your Nuvio app!
+
+

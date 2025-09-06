@@ -80,3 +80,5 @@ echo "🔐 Admin password: $ADMIN_PASSWORD"
 echo "   (Save this password securely!)"
 echo ""
 echo "📖 For detailed deployment instructions, see: koyeb-deployment-guide.md"
+
+
