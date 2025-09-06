@@ -1,25 +1,26 @@
+# Use Node.js 18 LTS as base image
+FROM node:18-alpine
 
-FROM node:18.18-alpine AS builder
-
+# Set working directory
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+# Copy package files
+COPY package*.json ./
 
-RUN npm install
+# Install dependencies
+RUN npm ci --only=production
 
+# Copy source code
 COPY . .
 
+# Build the application
 RUN npm run build
 
-
-FROM node:18.18-alpine as runner
-
-WORKDIR /app
-
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-
+# Expose port 3000
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+# Set environment to production
+ENV NODE_ENV=production
+
+# Start the application
+CMD ["npm", "start"]

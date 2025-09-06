@@ -38,7 +38,7 @@ export default async function manifestEndpoint(req: NextApiRequest, res: NextApi
     return;
   }
 
-  const protocolVersion = parseInt(protocolVersionMaybeArray ?? '0', 10);
+  const protocolVersion = parseInt(Array.isArray(protocolVersionMaybeArray) ? protocolVersionMaybeArray[0] : protocolVersionMaybeArray ?? '0', 10);
 
   const platform = req.headers['expo-platform'] ?? req.query['platform'];
   if (platform !== 'ios' && platform !== 'android') {
