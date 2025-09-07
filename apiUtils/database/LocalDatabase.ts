@@ -18,7 +18,14 @@ export class PostgresDatabase implements DatabaseInterface {
   }
   async getLatestReleaseRecordForRuntimeVersion(runtimeVersion: string): Promise<Release | null> {
     const query = `
-      SELECT id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash"
+      SELECT id,
+             runtime_version as "runtimeVersion",
+             path,
+             timestamp,
+             commit_hash as "commitHash",
+             commit_message as "commitMessage",
+             release_notes as "releaseNotes",
+             update_id as "updateId"
       FROM ${Tables.RELEASES} WHERE runtime_version = $1
       ORDER BY timestamp DESC
       LIMIT 1

@@ -20,7 +20,7 @@ export class SupabaseDatabase implements DatabaseInterface {
   async getLatestReleaseRecordForRuntimeVersion(runtimeVersion: string): Promise<Release | null> {
     const { data, error } = await this.supabase
       .from(Tables.RELEASES)
-      .select()
+      .select('id, runtime_version, path, timestamp, commit_hash, commit_message, release_notes, update_id')
       .eq('runtime_version', runtimeVersion)
       .order('timestamp', { ascending: false })
       .limit(1)
@@ -36,6 +36,7 @@ export class SupabaseDatabase implements DatabaseInterface {
         timestamp: data.timestamp,
         commitHash: data.commit_hash,
         commitMessage: data.commit_message,
+        releaseNotes: data.release_notes,
         updateId: data.update_id,
       };
     }
