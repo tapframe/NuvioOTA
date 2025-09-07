@@ -198,7 +198,9 @@ async function putUpdateInResponseAsync(
       ext: null,
     }),
     metadata: {
-      ...(releaseRecord?.releaseNotes && { releaseNotes: releaseRecord.releaseNotes }),
+      ...((releaseRecord?.releaseNotes || releaseRecord?.commitMessage) && {
+        releaseNotes: releaseRecord?.releaseNotes || releaseRecord?.commitMessage,
+      }),
     },
     extra: {
       expoClient: expoConfig,
