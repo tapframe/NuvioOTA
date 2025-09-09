@@ -20,24 +20,29 @@ export class SupabaseDatabase implements DatabaseInterface {
   async getLatestReleaseRecordForRuntimeVersion(runtimeVersion: string): Promise<Release | null> {
     const { data, error } = await this.supabase
       .from(Tables.RELEASES)
-      .select('id, runtime_version, path, timestamp, commit_hash, commit_message, release_notes, update_id')
+      .select(
+        'id, runtime_version, path, timestamp, commit_hash, commit_message, release_notes, update_id'
+      )
       .eq('runtime_version', runtimeVersion)
       .order('timestamp', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('Supabase query error:', error);
+      throw new Error(error.message);
+    }
 
-    if (data) {
+    if (data && data.length > 0) {
+      const release = data[0];
       return {
-        id: data.id,
-        runtimeVersion: data.runtime_version,
-        path: data.path,
-        timestamp: data.timestamp,
-        commitHash: data.commit_hash,
-        commitMessage: data.commit_message,
-        releaseNotes: data.release_notes,
-        updateId: data.update_id,
+        id: release.id,
+        runtimeVersion: release.runtime_version,
+        path: release.path,
+        timestamp: release.timestamp,
+        commitHash: release.commit_hash,
+        commitMessage: release.commit_message,
+        releaseNotes: release.release_notes,
+        updateId: release.update_id,
       };
     }
 
@@ -49,11 +54,18 @@ export class SupabaseDatabase implements DatabaseInterface {
       .from(Tables.RELEASES)
       .select()
       .eq('path', path)
-      .single();
+      .limit(1);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('Supabase query error:', error);
+      throw new Error(error.message);
+    }
 
-    return data || null;
+    if (data && data.length > 0) {
+      return data[0];
+    }
+
+    return null;
   }
 
   async getReleaseTrackingMetricsForAllReleases(): Promise<TrackingMetrics[]> {
@@ -144,18 +156,26 @@ export class SupabaseDatabase implements DatabaseInterface {
       .from(Tables.RELEASES)
       .select()
       .eq('id', id)
-      .single();
+      .limit(1);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase query error:', error);
+      throw error;
+    }
 
-    return {
-      id: data.id,
-      path: data.path,
-      runtimeVersion: data.runtime_version,
-      timestamp: data.timestamp,
-      commitHash: data.commit_hash,
-      commitMessage: data.commit_message,
-    };
+    if (data && data.length > 0) {
+      const release = data[0];
+      return {
+        id: release.id,
+        path: release.path,
+        runtimeVersion: release.runtime_version,
+        timestamp: release.timestamp,
+        commitHash: release.commit_hash,
+        commitMessage: release.commit_message,
+      };
+    }
+
+    return null;
   }
 
   async listReleases(): Promise<Release[]> {

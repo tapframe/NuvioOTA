@@ -11,7 +11,7 @@ export default async function healthHandler(req: NextApiRequest, res: NextApiRes
     // Test database connection
     const db = DatabaseFactory.getDatabase();
     const releases = await db.listReleases();
-    
+
     // Test environment variables
     const envCheck = {
       DB_TYPE: process.env.DB_TYPE,
@@ -27,7 +27,7 @@ export default async function healthHandler(req: NextApiRequest, res: NextApiRes
       database: 'connected',
       releasesCount: releases.length,
       environment: envCheck,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Health check failed:', error);
@@ -42,10 +42,7 @@ export default async function healthHandler(req: NextApiRequest, res: NextApiRes
         POSTGRES_PORT: process.env.POSTGRES_PORT,
         NODE_ENV: process.env.NODE_ENV,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
-
-
-
