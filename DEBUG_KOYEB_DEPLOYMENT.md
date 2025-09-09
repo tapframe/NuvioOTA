@@ -22,10 +22,10 @@ Make sure these are set in your Koyeb app settings:
 ```env
 # Database Configuration
 DB_TYPE=postgres
-POSTGRES_USER=koyeb-adm
-POSTGRES_PASSWORD=npg_RbWXQ8znf2Sj
-POSTGRES_DB=koyebdb
-POSTGRES_HOST=ep-cool-cell-a202shcm.eu-central-1.pg.koyeb.app
+POSTGRES_USER=your-postgres-user
+POSTGRES_PASSWORD=your-postgres-password
+POSTGRES_DB=your-database-name
+POSTGRES_HOST=your-postgres-host
 POSTGRES_PORT=5432
 
 # Storage Configuration
@@ -34,10 +34,10 @@ BLOB_STORAGE_TYPE=supabase
 # BLOB_STORAGE_TYPE=local
 
 # Admin Configuration
-ADMIN_PASSWORD=t7FdoQGSGENiduZXO/w7LYUEm0YK79F+byiggsD4sJk=
+ADMIN_PASSWORD=your-secure-admin-password
 
 # Host Configuration
-HOST=https://grim-reyna-tapframe-69970143.koyeb.app
+HOST=https://your-app-name.koyeb.app
 
 # Optional: Supabase Storage (if using Supabase)
 SUPABASE_URL=your-supabase-url
@@ -56,7 +56,7 @@ SUPABASE_BUCKET_NAME=expo-updates
 ### 2. Test Database Connection
 ```bash
 # Test from your local machine
-psql "postgres://koyeb-adm:npg_RbWXQ8znf2Sj@ep-cool-cell-a202shcm.eu-central-1.pg.koyeb.app/koyebdb" -c "\dt"
+psql "postgres://your-user:your-password@your-host/your-database" -c "\dt"
 ```
 
 ### 3. Check Koyeb Logs
@@ -67,10 +67,10 @@ psql "postgres://koyeb-adm:npg_RbWXQ8znf2Sj@ep-cool-cell-a202shcm.eu-central-1.p
 ### 4. Test API Endpoints
 ```bash
 # Test releases endpoint
-curl -v https://grim-reyna-tapframe-69970143.koyeb.app/api/releases
+curl -v https://your-app-name.koyeb.app/api/releases
 
 # Test health endpoint (after deployment)
-curl -v https://grim-reyna-tapframe-69970143.koyeb.app/api/health
+curl -v https://your-app-name.koyeb.app/api/health
 ```
 
 ## Common Issues & Solutions
