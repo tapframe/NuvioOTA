@@ -27,21 +27,28 @@ export default async function uploadHandler(req: NextApiRequest, res: NextApiRes
   try {
     const [fields, files] = await form.parse(req);
     const file = files.file?.[0];
-    const runtimeVersion = fields.runtimeVersion?.[0];
+    const runtimeVersionField = fields.runtimeVersion?.[0];
     const commitHash = fields.commitHash?.[0];
     const commitMessage = fields.commitMessage?.[0] || 'No message provided';
     const releaseNotes = fields.releaseNotes?.[0] || '';
 
-    if (!file || !runtimeVersion || !commitHash) {
+    if (!file || !runtimeVersionField || !commitHash) {
       res.status(400).json({ error: 'Missing file, runtime version, or commit hash' });
+      return;
+    }
+
+    // Support comma-separated runtime versions for multi-version deployment
+    const runtimeVersions = runtimeVersionField.split(',').map(v => v.trim()).filter(v => v.length > 0);
+
+    if (runtimeVersions.length === 0) {
+      res.status(400).json({ error: 'No valid runtime versions provided' });
       return;
     }
 
     const storage = StorageFactory.getStorage();
     const timestamp = moment().utc().format('YYYYMMDDHHmmss');
-    const updatePath = `updates/${runtimeVersion}`;
 
-    // Store the zipped file as is
+    // Read the zip file once
     const zipContent = fs.readFileSync(file.filepath);
     const zipFolder = new AdmZip(file.filepath);
     const metadataJsonFile = await ZipHelper.getFileFromZip(zipFolder, 'metadata.json');
@@ -49,23 +56,60 @@ export default async function uploadHandler(req: NextApiRequest, res: NextApiRes
     const updateHash = HashHelper.createHash(metadataJsonFile, 'sha256', 'hex');
     const updateId = HashHelper.convertSHA256HashToUUID(updateHash);
 
-    const path = await storage.uploadFile(`${updatePath}/${timestamp}.zip`, zipContent);
+    const results: { runtimeVersion: string; path: string; success: boolean; error?: string }[] = [];
 
-    const releasePayload: any = {
-      path,
-      runtimeVersion,
-      timestamp: moment().utc().toString(),
-      commitHash,
-      commitMessage,
-      updateId,
-    };
-    if (releaseNotes && releaseNotes.trim().length > 0) {
-      releasePayload.releaseNotes = releaseNotes;
+    // Deploy to all specified runtime versions
+    for (const runtimeVersion of runtimeVersions) {
+      try {
+        const updatePath = `updates/${runtimeVersion}`;
+        const path = await storage.uploadFile(`${updatePath}/${timestamp}.zip`, zipContent);
+
+        const releasePayload: any = {
+          path,
+          runtimeVersion,
+          timestamp: moment().utc().toString(),
+          commitHash,
+          commitMessage,
+          updateId,
+        };
+        if (releaseNotes && releaseNotes.trim().length > 0) {
+          releasePayload.releaseNotes = releaseNotes;
+        }
+
+        await DatabaseFactory.getDatabase().createRelease(releasePayload);
+
+        results.push({ runtimeVersion, path, success: true });
+        console.log(`Successfully deployed to runtime version ${runtimeVersion}: ${path}`);
+      } catch (versionError: any) {
+        console.error(`Failed to deploy to runtime version ${runtimeVersion}:`, versionError);
+        results.push({
+          runtimeVersion,
+          path: '',
+          success: false,
+          error: versionError.message || 'Unknown error'
+        });
+      }
     }
 
-    await DatabaseFactory.getDatabase().createRelease(releasePayload);
+    // Check if at least one deployment succeeded
+    const successfulDeployments = results.filter(r => r.success);
+    const failedDeployments = results.filter(r => !r.success);
 
-    res.status(200).json({ success: true, path });
+    if (successfulDeployments.length === 0) {
+      res.status(500).json({
+        error: 'All deployments failed',
+        results
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      path: successfulDeployments[0].path,
+      deployedVersions: successfulDeployments.map(r => r.runtimeVersion),
+      failedVersions: failedDeployments.map(r => ({ version: r.runtimeVersion, error: r.error })),
+      results
+    });
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ error: 'Upload failed' });
