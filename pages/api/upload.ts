@@ -27,18 +27,30 @@ export default async function uploadHandler(req: NextApiRequest, res: NextApiRes
   try {
     const [fields, files] = await form.parse(req);
     const file = files.file?.[0];
-    const runtimeVersionField = fields.runtimeVersion?.[0];
+    const runtimeVersionFields = fields.runtimeVersion ?? [];
     const commitHash = fields.commitHash?.[0];
     const commitMessage = fields.commitMessage?.[0] || 'No message provided';
     const releaseNotes = fields.releaseNotes?.[0] || '';
 
-    if (!file || !runtimeVersionField || !commitHash) {
+    if (!file || runtimeVersionFields.length === 0 || !commitHash) {
       res.status(400).json({ error: 'Missing file, runtime version, or commit hash' });
       return;
     }
 
-    // Support comma-separated runtime versions for multi-version deployment
-    const runtimeVersions = runtimeVersionField.split(',').map(v => v.trim()).filter(v => v.length > 0);
+    // Support:
+    // - comma-separated runtime versions in a single field, e.g. "1.0.0,1.0.1"
+    // - repeated runtimeVersion fields, e.g. runtimeVersion=1.0.0 & runtimeVersion=1.0.1
+    // Deduped while preserving order.
+    const runtimeVersions: string[] = [];
+    for (const fieldValue of runtimeVersionFields) {
+      const parts = String(fieldValue)
+        .split(',')
+        .map(v => v.trim())
+        .filter(v => v.length > 0);
+      for (const v of parts) {
+        if (!runtimeVersions.includes(v)) runtimeVersions.push(v);
+      }
+    }
 
     if (runtimeVersions.length === 0) {
       res.status(400).json({ error: 'No valid runtime versions provided' });
