@@ -66,37 +66,26 @@ export default async function manifestEndpoint(req: NextApiRequest, res: NextApi
   const db = DatabaseFactory.getDatabase();
   const releaseRecord = await db.getLatestReleaseRecordForRuntimeVersion(runtimeVersion, platform as string);
 
-  if (releaseRecord) {
-    const updateId = releaseRecord.updateId;
-
-    const currentUpdateId = req.headers['expo-current-update-id'];
-    if (currentUpdateId === updateId) {
-      logger.info('User is already running the latest release. Returning NoUpdateAvailable.', {
-        runtimeVersion,
-      });
-      await putNoUpdateAvailableInResponseAsync(req, res, protocolVersion);
-      return;
-    }
-  }
-
-  let updateBundlePath: string;
-  try {
-    updateBundlePath = await UpdateHelper.getLatestUpdateBundlePathForRuntimeVersionAsync(
-      runtimeVersion
-    );
-  } catch (error: any) {
-    if (error instanceof NoUpdateAvailableError) {
-      logger.info('No update available for runtime version', { runtimeVersion });
-      await putNoUpdateAvailableInResponseAsync(req, res, protocolVersion);
-      return;
-    }
-
-    res.statusCode = 404;
-    res.json({
-      error: error.message,
-    });
+  if (!releaseRecord) {
+    logger.info('No release found in DB for runtime version', { runtimeVersion, platform });
+    await putNoUpdateAvailableInResponseAsync(req, res, protocolVersion);
     return;
   }
+
+  const updateId = releaseRecord.updateId;
+  const currentUpdateId = req.headers['expo-current-update-id'];
+  if (currentUpdateId === updateId) {
+    logger.info('User is already running the latest release. Returning NoUpdateAvailable.', {
+      runtimeVersion,
+    });
+    await putNoUpdateAvailableInResponseAsync(req, res, protocolVersion);
+    return;
+  }
+
+  // Use path from release record. ZipHelper expects path without .zip extension
+  const updateBundlePath = releaseRecord.path.endsWith('.zip')
+    ? releaseRecord.path.substring(0, releaseRecord.path.length - 4)
+    : releaseRecord.path;
 
   const updateType = await getTypeOfUpdateAsync(updateBundlePath);
 
@@ -109,7 +98,7 @@ export default async function manifestEndpoint(req: NextApiRequest, res: NextApi
           res,
           updateBundlePath,
           runtimeVersion,
-          platform,
+          platform as string,
           protocolVersion
         );
       } else if (updateType === UpdateType.ROLLBACK) {
