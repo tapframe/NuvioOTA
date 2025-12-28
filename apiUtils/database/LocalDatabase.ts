@@ -16,7 +16,7 @@ export class PostgresDatabase implements DatabaseInterface {
       ssl: process.env.POSTGRES_SSL === 'true' ? { rejectUnauthorized: false } : false,
     });
   }
-  async getLatestReleaseRecordForRuntimeVersion(runtimeVersion: string): Promise<Release | null> {
+  async getLatestReleaseRecordForRuntimeVersion(runtimeVersion: string, platform?: string): Promise<Release | null> {
     const query = `
       SELECT id,
              runtime_version as "runtimeVersion",
@@ -25,13 +25,19 @@ export class PostgresDatabase implements DatabaseInterface {
              commit_hash as "commitHash",
              commit_message as "commitMessage",
              release_notes as "releaseNotes",
-             update_id as "updateId"
-      FROM ${Tables.RELEASES} WHERE runtime_version = $1
+             update_id as "updateId",
+             platforms
+      FROM ${Tables.RELEASES} 
+      WHERE runtime_version = $1
+      ${platform ? `AND (platforms IS NULL OR platforms ILIKE $2)` : ''}
       ORDER BY timestamp DESC
       LIMIT 1
     `;
 
-    const { rows } = await this.pool.query(query, [runtimeVersion]);
+    const values = [runtimeVersion];
+    if (platform) values.push(`%${platform}%`);
+
+    const { rows } = await this.pool.query(query, values);
     return rows[0] || null;
   }
   async getReleaseByPath(path: string): Promise<Release | null> {
@@ -83,9 +89,9 @@ export class PostgresDatabase implements DatabaseInterface {
 
   async createRelease(release: Omit<Release, 'id'>): Promise<Release> {
     const query = `
-      INSERT INTO ${Tables.RELEASES} (runtime_version, path, timestamp, commit_hash, commit_message, release_notes, update_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash", commit_message as "commitMessage", release_notes as "releaseNotes", update_id as "updateId"
+      INSERT INTO ${Tables.RELEASES} (runtime_version, path, timestamp, commit_hash, commit_message, release_notes, update_id, platforms)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id, runtime_version as "runtimeVersion", path, timestamp, commit_hash as "commitHash", commit_message as "commitMessage", release_notes as "releaseNotes", update_id as "updateId", platforms
     `;
 
     const values = [
@@ -96,6 +102,7 @@ export class PostgresDatabase implements DatabaseInterface {
       release.commitMessage,
       release.releaseNotes || null,
       release.updateId,
+      release.platforms || null,
     ];
     const { rows } = await this.pool.query(query, values);
     return rows[0];

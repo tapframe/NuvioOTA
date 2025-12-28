@@ -17,13 +17,19 @@ export class SupabaseDatabase implements DatabaseInterface {
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
-  async getLatestReleaseRecordForRuntimeVersion(runtimeVersion: string): Promise<Release | null> {
-    const { data, error } = await this.supabase
+  async getLatestReleaseRecordForRuntimeVersion(runtimeVersion: string, platform?: string): Promise<Release | null> {
+    let query = this.supabase
       .from(Tables.RELEASES)
       .select(
-        'id, runtime_version, path, timestamp, commit_hash, commit_message, release_notes, update_id'
+        'id, runtime_version, path, timestamp, commit_hash, commit_message, release_notes, update_id, platforms'
       )
-      .eq('runtime_version', runtimeVersion)
+      .eq('runtime_version', runtimeVersion);
+
+    if (platform) {
+      query = query.or(`platforms.is.null,platforms.ilike.%${platform}%`);
+    }
+
+    const { data, error } = await query
       .order('timestamp', { ascending: false })
       .limit(1);
 
@@ -43,6 +49,7 @@ export class SupabaseDatabase implements DatabaseInterface {
         commitMessage: release.commit_message,
         releaseNotes: release.release_notes,
         updateId: release.update_id,
+        platforms: release.platforms,
       };
     }
 
@@ -143,6 +150,7 @@ export class SupabaseDatabase implements DatabaseInterface {
         commit_message: release.commitMessage,
         release_notes: release.releaseNotes || null,
         update_id: release.updateId,
+        platforms: release.platforms || null,
       })
       .select()
       .single();

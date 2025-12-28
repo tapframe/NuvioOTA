@@ -64,7 +64,7 @@ export default async function manifestEndpoint(req: NextApiRequest, res: NextApi
   }
 
   const db = DatabaseFactory.getDatabase();
-  const releaseRecord = await db.getLatestReleaseRecordForRuntimeVersion(runtimeVersion);
+  const releaseRecord = await db.getLatestReleaseRecordForRuntimeVersion(runtimeVersion, platform as string);
 
   if (releaseRecord) {
     const updateId = releaseRecord.updateId;
@@ -159,7 +159,7 @@ async function putUpdateInResponseAsync(
   // Get release record to include release notes
   const db = DatabaseFactory.getDatabase();
   // Use the latest record for this runtimeVersion to avoid path-specific lookups that may vary by storage
-  const releaseRecord = await db.getLatestReleaseRecordForRuntimeVersion(runtimeVersion);
+  const releaseRecord = await db.getLatestReleaseRecordForRuntimeVersion(runtimeVersion, platform);
 
   // NoUpdateAvailable directive only supported on protocol version 1
   // for protocol version 0, serve most recent update as normal
